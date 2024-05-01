@@ -1,8 +1,8 @@
 from fastapi import APIRouter, HTTPException
 from models.models import FavoritePost
 from database.database import db
-from models.modelsTable import favorites
-
+from models.modelsTable import favorites, users
+from peewee import DoesNotExist
 router = APIRouter( tags=["like"])
 
 @router.get("/favorite/{idPosts}/{UserId}")
@@ -23,39 +23,42 @@ async def get_favorite_state(idPosts: int, UserId: int):
     if not db.is_closed():
       db.close()
 
-@router.post("/favorite")
-async def addFavorite(favorite: FavoritePost):
+@router.post("/favorite/{idPosts}/{UserId}")
+async def addFavorite(idPosts: int, UserId: int):
   try:
     db.connect()
-    queryVerify = favorites.select().where((favorites.posts_id == favorite.idPosts) & (favorites.users_id == favorites.users_id))
-    if queryVerify:
-      deleteFav = favorites.update(favorite_state = "1").where((favorites.posts_id == favorite.idPosts) & (favorites.users_id == favorite.UserId))
-      deleteFav.execute()
-      raise HTTPException(status_code=201, detail="ADD POSTS FAVORITE")
-
-    newFavorite = favorites.insert(posts_id = favorite.idPosts, users_id = favorite.UserId, favorite_state = 1)
-    rowModify = newFavorite.execute()
-
-    if rowModify > 0:
-      raise HTTPException(status_code=201, detail="ADD POSTS FAVORITE")
-    else:
-      raise HTTPException(status_code=400, detail="ERROR ADD POST FAVORITE")
-  finally:
-    if not db.is_closed():
-      db.close
-  
-@router.delete("/favoriteDelete/{idUser}/{idPost}")
-async def deleteFavorite(idUser: int, idPost: int):
-  try:
-    db.connect()
-    queryFav = favorites.select(favorites.favorite_state).where((favorites.posts_id == idPost) & (favorites.users_id == idUser))
-    if(queryFav):
-      deleteFav = favorites.update(favorite_state = "0").where((favorites.posts_id == idPost) & (favorites.users_id == idUser))
-      deleteFav.execute()
-      raise HTTPException(status_code=200, detail="DELETE FAVORITE POST")
+    try:
+      favorites.get(posts_id = idPosts, users_id = UserId)
+      updateFav = favorites.update(favorite_state = "1").where((favorites.posts_id == idPosts) & (favorites.users_id == UserId))
+      updateFav.execute()
+      raise HTTPException(status_code=201, detail="ADD AGAIN POSTS FAVORITE")
+    except DoesNotExist:
+      newFavorite = favorites.create(posts_id = idPosts, users_id = UserId, favorite_state = 1)
+      if(newFavorite):
+        raise HTTPException(status_code=201, detail="ADD POSTS FAVORITE")
+      else: 
+        raise HTTPException(status_code=500, detail="ERROR TRY AGAIN")
   finally:
     if not db.is_closed():
       db.close()
+  
+#VERIFICAR ERRORES EN LA CONNECION DE LA BASE DE DATOS POSIBLEMENTE SEA EL EXPECT DOESNOTEXIST AGREAGADO PARA VERIFICAR
+@router.delete("/favoriteDelete/{idPost}/{idUser}")
+async def deleteFavorite(idPost: int, idUser: int):
+  try:
+    db.connect()
+    try:
+      users.get(id_users = idUser)
+      queryFav = favorites.select(favorites.favorite_state).where((favorites.posts_id == idPost) & (favorites.users_id == idUser))
+      if(queryFav):
+        deleteFav = favorites.update(favorite_state = "0").where((favorites.posts_id == idPost) & (favorites.users_id == idUser))
+        deleteFav.execute()
+        raise HTTPException(status_code=200, detail="DELETE FAVORITE POST")
+    except DoesNotExist:
+      raise HTTPException(status_code=404, detail="USER NOT EXISTS")
+  finally:
+    if not db.is_closed():
+        db.close()
 
 @router.get("/favorites/{idUser}")
 async def favoritesUser(idUser: int):

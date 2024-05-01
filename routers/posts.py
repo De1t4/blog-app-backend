@@ -61,8 +61,10 @@ async def getPosts(id_posts: int):
           "name":data.users_id.name,
           "idUser":data.users_id.id_users,
           "picture":data.imagePost if data.imagePost else "",
-          "comments":[]
+          "comments":[],
+          "favorite":0
         }
+  
       dataComments = comments.select(users.id_users, users.name, users.lastname, comments.dateComment, users.email, comments.comment, comments.id_comment).join(users, on=(users.id_users == comments.users_id)).where(comments.posts_id == id_posts)
       for info in dataComments:
           obj_comments = {
@@ -74,6 +76,7 @@ async def getPosts(id_posts: int):
               "content": info.comment,
               "idComment":info.id_comment,          
               }
+      
           obj_posts["comments"].append(obj_comments)
       return obj_posts
   finally:
@@ -117,7 +120,8 @@ async def createPost(idUser: int, Picture: UploadFile = File(...) ,Title: str = 
   except Exception as e:
       raise HTTPException(status_code=500, detail=f"Error al procesar la solicitud: {str(e)}")
   finally:
-    db.close()
+    if not db.is_closed():
+        db.close()
   
 
 @router.delete("/deletePost/{idPosts}")
