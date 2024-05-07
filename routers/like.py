@@ -64,20 +64,23 @@ async def deleteFavorite(idPost: int, idUser: int):
 async def favoritesUser(idUser: int):
   try:
     db.connect()
-    queryFav = favorites.select().where(favorites.users_id == idUser)
+    verifyUser = users.select(users.name).where(idUser == users.id_users)
+    if(verifyUser):
+      queryFav = favorites.select().where(favorites.users_id == idUser)
+      arrLike = []
+      for data in queryFav:
+        if data.favorite_state == "1":
+          obj_fav = {
+            "favorite": data.id_like,
+            "title":data.posts_id.title,
+            "content":data.posts_id.content,
+            "date":data.posts_id.datePublication,
+            "idPosts":data.posts_id.id_posts,
+          }
+          arrLike.append(obj_fav)
 
-    arrLike = []
-    for data in queryFav:
-      if data.favorite_state == "1":
-        obj_fav = {
-          "favorite": data.id_like,
-          "title":data.posts_id.title,
-          "content":data.posts_id.content,
-          "idPosts":data.posts_id.id_posts,
-        }
-        arrLike.append(obj_fav)
-
-    return arrLike
+      return arrLike
+    raise HTTPException(status_code=404, detail="USER NOT EXISTS")
   finally: 
     if not db.is_closed():
       db.close()
