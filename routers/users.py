@@ -9,7 +9,7 @@ from passlib.context import CryptContext
 
 router = APIRouter( tags=["users"])
 
-SECRET_KEY = "3bca2946943ea021b6dd7e32ee4a05449c4742cc2a7c02364836dbf48bdce2bbdd7c170da4461251b4b6f6a6e723ca11026413846b9af5e788bd92f34971db18"
+SECRET_KEY = "4bca2946943ea021b6dd7e32ee4a05449c4742cc2a7c02364836dbf48bdce2bbdd7c170da4461251b4b6f6a6e723ca11026413846b9af5e788bd92f34971db18"
 ALGORITHM = "HS256"
 ACCESS_TOKEN_DURATION = 1
 
@@ -141,8 +141,6 @@ async def getUser(user_id: int):
       if(dataComments):
         for info in dataComments:
           comment_obj = {
-            "posts_id":info.posts_id.id_posts,
-            "title":info.posts_id.title,
             "id_comment": info.id_comment,
             "comment": info.comment,
             "dateComment": info.dateComment
