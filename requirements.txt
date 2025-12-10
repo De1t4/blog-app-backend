@@ -4,10 +4,10 @@ cloudinary==1.39.1
 mysql-connector-python==9.1.0
 python-dotenv==1.0.1
 peewee==3.17.1
-python-multipart==0.0.6
+python-multipart==0.0.7
 PyMySQL==1.1.1
 mysqlclient==2.2.0
 python-jose==3.3.0
-python-multipart==0.0.6
+python-multipart==0.0.7
 passlib==1.7.4
 bcrypt==4.0.1
